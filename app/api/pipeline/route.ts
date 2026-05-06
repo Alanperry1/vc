@@ -8,7 +8,8 @@ const STAGES = ['sourced', 'contacted', 'diligence', 'term_sheet', 'closed', 'pa
 
 export async function GET() {
   const rows = await query<{ stage: string }>(
-    `SELECT d.*, c.name AS company_name, c.sector, c.ai_score, c.logo_url, c.homepage
+    `SELECT d.*, c.name AS company_name, c.sector, c.ai_score, c.logo_url, c.homepage,
+            c.raised_usd, c.momentum_score, c.source, c.github_url
      FROM pipeline_deals d
      JOIN companies c ON c.id = d.company_id
      ORDER BY d.stage, d.position, d.updated_at DESC`,

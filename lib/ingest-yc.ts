@@ -61,6 +61,23 @@ function inferStage(c: YcCompany): string | null {
   return 'series-c';
 }
 
+// YC does not expose GitHub-style stars/day, so we use a public-data proxy
+// that rewards fresher companies, larger teams, and top-company status.
+function inferMomentum(c: YcCompany): number | null {
+  const launchedAt = c.launched_at;
+  const hasSignal = typeof launchedAt === 'number' && launchedAt > 0;
+  const teamSize = Math.max(0, c.team_size ?? 0);
+  if (!hasSignal && teamSize === 0 && !c.top_company) return null;
+
+  const ageYears = hasSignal
+    ? Math.max(0.25, (Date.now() / 1000 - launchedAt) / (365.25 * 86_400))
+    : Math.max(1, new Date().getFullYear() - batchYear(c) + 1);
+  const freshness = 6 / Math.sqrt(ageYears);
+  const team = Math.log10(teamSize + 1) * 2.5;
+  const top = c.top_company ? 3 : 0;
+  return Math.round((freshness + team + top) * 10) / 10;
+}
+
 let CACHE: { at: number; data: YcCompany[] } | null = null;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -156,6 +173,7 @@ export async function ingestYC(take = 200): Promise<number> {
       const homepage = hit.website || null;
       const sector = mapSector(hit);
       const stage = inferStage(hit);
+      const momentum = inferMomentum(hit);
       const launchedAt = hit.launched_at ?? Math.floor(Date.now() / 1000);
       const ycUrl = hit.url || `https://www.ycombinator.com/companies/${hit.slug}`;
 
@@ -170,6 +188,7 @@ export async function ingestYC(take = 200): Promise<number> {
           team_size: hit.team_size ?? null,
           homepage,
           logo_url: hit.small_logo_thumb_url || null,
+          momentum_score: momentum,
           source: 'yc',
         });
         if (created) {

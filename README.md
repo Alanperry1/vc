@@ -1,98 +1,85 @@
 # FounderLens
 
-AI-native deal-sourcing platform for venture capital. Built as a portfolio piece in a few days using **Next.js 15**, **Vercel Postgres**, and **Anthropic Claude Sonnet 4.5**.
+FounderLens is a venture sourcing workspace for finding early companies, scoring them, tracking founders, and moving deals through a pipeline.
 
-> Continuously surfaces early-stage AI/devtools companies from GitHub and Hacker News, scores them with Claude across five investor dimensions, and lets you track them through a kanban pipeline.
+It pulls company and founder signals from public sources, normalizes that data into a single Postgres-backed app, scores companies and founders with Claude, and gives you one place to search, review, and track what matters.
 
----
+## What The Product Does
 
-## What it does
+- Dashboard: shows top scored companies, highest momentum companies, and a live signal feed.
+- Discover: lets you browse companies by source, sector, stage, score, and search query.
+- Founders: gives you a searchable, paginated founder view with AI scoring and a detail drawer.
+- Network: tracks operators, investors, angels, LPs, advisors, and intro status.
+- Pipeline: manages companies across sourced, contacted, diligence, term sheet, closed, and passed.
+- Memos: generates an investment memo for a company from its stored data and signal history.
 
-- **Ingest** — pulls trending repos from the GitHub Search API and Show HN / Launch HN posts from the HN Algolia API.
-- **Enrich** — heuristics extract domain, sector, stage, and raise amounts; Claude Sonnet 4.5 scores each company on market, differentiation, timing, team, and traction.
-- **Memo** — one-click "Generate memo" turns a company + its signal history into a one-page investment memo (markdown).
-- **Pipeline** — drag-and-drop kanban board across `sourced → contacted → diligence → term sheet → closed / passed`, persisted to Postgres.
-- **Live signals** — every signal (new repo momentum, HN launch, funding mention) shows up in the dashboard feed.
+## Data Sources
 
-## Stack
+- GitHub repositories and maintainer profiles
+- Hacker News stories
+- Product Hunt RSS
+- Reddit launch and funding posts
+- YC company data
+- Public YC founder pages for founder enrichment
 
-| Layer        | Choice                                              |
-| ------------ | --------------------------------------------------- |
-| Framework    | Next.js 15.5 (App Router) on **Vercel**             |
-| Database     | **Vercel Postgres** (Neon) via `pg`                 |
-| LLM          | **Anthropic Claude Sonnet 4.5** (`claude-sonnet-4-5`) |
-| Frontend     | React 19, Tailwind CSS, SWR, `@dnd-kit`             |
-| Ingestion    | GitHub Search API, HN Algolia API                   |
+The app stores and surfaces fields such as company description, sector, stage, source history, momentum, raised amount, founder links, score breakdowns, and company memos.
 
-Single deploy target. Three environment variables. One database. Zero background workers — refresh is on-demand from the dashboard.
+## How The App Is Organized
 
-## Project layout
-
-```
+```text
 app/
-  api/
-    companies/         GET list, GET/[id], POST/[id]/score, POST/[id]/memo
-    deals/[id]         PATCH stage / position / notes
-    pipeline/          GET deals grouped by stage
-    signals/           GET recent signal feed
-    ingest/            POST → ingest GitHub + HN sources
-    migrate/           POST → apply Postgres schema (run once)
-    health/            GET → row counts
-  page.tsx             dashboard (top scored, momentum, live feed, refresh)
-  discover/            filterable + searchable browser
-  pipeline/            drag-and-drop kanban
-components/            CompanyCard, CompanyDrawer, SignalFeed
+  api/              API routes for companies, founders, pipeline, ingest, scoring, and health
+  discover/         company browsing and filtering
+  founders/         founder browsing and detail drawer entry point
+  network/          relationship tracking UI
+  pipeline/         deal board UI
+  page.tsx          dashboard
+
+components/
+  CompanyCard.tsx
+  CompanyDrawer.tsx
+  FounderDrawer.tsx
+  SignalFeed.tsx
+
 lib/
-  db.ts                pg Pool singleton + query helpers
-  schema.ts            Postgres schema DDL
-  store.ts             upsertCompany, insertSignal
-  claude.ts            scoreCompany, generateMemo (direct fetch to Anthropic)
-  ingest-github.ts     GitHub Search ingester
-  ingest-hn.ts         HN Algolia ingester
-  util.ts              uid, slugify, parseRaiseAmount, detectStage, adminGuard
-  api.ts               typed fetcher used by the React components
+  api.ts            shared frontend types and fetch helpers
+  claude.ts         company scoring and memo generation
+  db.ts             Postgres access helpers
+  embeddings.ts     vector embedding helpers and similarity support
+  founders.ts       founder scoring
+  ingest-*.ts       source-specific ingest pipelines
+  schema.ts         schema bootstrap
+  store.ts          normalized upsert and insert helpers
+  util.ts           parsing and utility helpers
 ```
 
-## Deploy to Vercel
+## How TypeScript Works Here
 
-1. **Push to GitHub** and import the repo at <https://vercel.com/new>.
-2. **Add Vercel Postgres** — open the project's *Storage* tab and create a Postgres database. Vercel injects `DATABASE_URL` automatically.
-3. **Add two secrets** in *Settings → Environment Variables*:
-   - `ANTHROPIC_API_KEY` — your Claude key
-   - `GITHUB_TOKEN` — a fine-grained PAT (no scopes needed; just lifts rate limits)
-   - *(optional)* `ADMIN_SECRET` — if set, `/api/migrate` and `/api/ingest` require `?secret=...` or `x-admin-secret` header
-4. **Deploy.**
-5. **Initialize the schema** (once):
-   ```bash
-   curl -X POST https://your-app.vercel.app/api/migrate
-   ```
-6. **Open the dashboard** and click **Refresh data**. Within ~30 seconds you'll have live companies and signals.
+This repo uses TypeScript as the contract between the database layer, API routes, and UI.
 
-## Local dev
+- `.ts` files hold server logic, API routes, ingest code, database helpers, and shared utilities.
+- `.tsx` files hold React pages and components that render the UI.
+- `tsconfig.json` runs TypeScript in strict mode, so missing fields and bad assumptions are caught early.
+- `allowJs: false` keeps the typed app code in TypeScript instead of mixing typed and untyped source.
+- `noEmit: true` means TypeScript is used for type-checking only; Next.js handles the actual app build.
+- The `@/*` path alias lets the code import from the project root, such as `@/lib/api` or `@/components/CompanyDrawer`.
 
-```bash
-npm install
-cp .env.example .env.local   # fill in DATABASE_URL, ANTHROPIC_API_KEY, GITHUB_TOKEN
-npm run dev
-```
+## Type Flow In This Repo
 
-Then `curl -X POST http://localhost:3000/api/migrate` and click *Refresh data* on the dashboard.
+The main flow is:
 
-## Cost
+1. Ingest code in `lib/ingest-*.ts` collects raw source data.
+2. `lib/store.ts` normalizes that data into the database.
+3. API routes in `app/api/*` read and write structured records.
+4. `lib/api.ts` defines shared frontend types such as `Company`, `Founder`, `Deal`, `Signal`, and `Connection`.
+5. Pages and components use those shared types so the UI matches the API shape.
 
-- Vercel Hobby: free
-- Vercel Postgres free tier: ~256 MB / 60h compute
-- Claude: pay-per-use; one score ≈ $0.005, one memo ≈ $0.02
+That shared typing is what keeps the app consistent. If an API route starts returning a new field, the matching interface should be updated first. Once that type changes, components that use the old shape will fail type-checking until they are updated.
 
-A normal demo session costs cents.
+## Practical TypeScript Examples In This Codebase
 
-## Why this design
+- `Company` in `lib/api.ts` is used by dashboard cards, discover results, and company drawers.
+- `Deal` in `lib/api.ts` is used by the pipeline board, so fields like `ai_score`, `momentum_score`, and `raised_usd` stay aligned with the pipeline API.
+- `Founder` in `lib/api.ts` is used by the founders page and founder drawer, which keeps founder scoring fields and social links consistent.
 
-- **One service, three env vars** — easier to inspect, easier to hand off.
-- **No queues, no cron** — refresh is a button click. Eliminates a whole class of orchestration bugs and stays inside Vercel's 60-second function budget.
-- **Direct Anthropic `fetch`** — no SDK, no extra cold-start surface area; the API is small enough that one helper file (`lib/claude.ts`) covers scoring and memo generation.
-- **Deterministic upserts on (domain || github_url)** — re-running ingest is safe and idempotent.
-
----
-
-Built by Aleksandar Zarkov. Source available on request — designed as a working portfolio piece for VC engineering roles.
+In other words, TypeScript here is not just syntax. It is the shared schema for how data moves from ingest, to database, to API, to UI.

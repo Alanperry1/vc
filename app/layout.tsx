@@ -11,20 +11,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <div className="min-h-screen flex flex-col">
+      <body className="overflow-x-clip">
+        <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip">
           <header className="border-b border-white/5 sticky top-0 z-30 bg-ink-950/80 backdrop-blur-md">
-            <div className="mx-auto flex min-h-14 max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
-              <Link href="/" className="flex items-center gap-2 group">
+            <div className="mx-auto flex min-h-14 max-w-7xl min-w-0 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
+              <Link href="/" className="group flex min-w-0 items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-soft grid place-items-center text-white text-xs font-bold">
                   FL
                 </div>
-                <span className="font-semibold tracking-tight text-white group-hover:text-accent-soft transition">
+                <span className="truncate font-semibold tracking-tight text-white transition group-hover:text-accent-soft">
                   FounderLens
                 </span>
               </Link>
-              <div className="w-full overflow-x-auto sm:w-auto">
-                <nav className="flex min-w-max items-center gap-1 pb-1 text-sm sm:pb-0">
+              <div className="w-full min-w-0 sm:w-auto">
+                <nav className="flex flex-wrap items-center gap-1 pb-1 text-sm sm:justify-end sm:pb-0">
                   <NavLink href="/">Dashboard</NavLink>
                   <NavLink href="/discover">Discover</NavLink>
                   <NavLink href="/founders">Founders</NavLink>
@@ -32,13 +32,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <NavLink href="/network">Network</NavLink>
                 </nav>
               </div>
-              <div className="text-xs text-ink-500 hidden sm:block">
+              <div className="hidden text-xs text-ink-500 sm:block sm:text-right">
                 powered by <span className="text-accent-soft">Claude Sonnet 4.5</span>
               </div>
             </div>
           </header>
-          <main className="mx-auto flex-1 max-w-7xl w-full px-4 py-6 sm:px-6 sm:py-8">{children}</main>
-          <footer className="border-t border-white/5 px-4 py-6 text-center text-xs text-ink-500 sm:px-6">
+          <main className="mx-auto flex-1 w-full max-w-7xl min-w-0 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+          <footer className="border-t border-white/5 px-4 py-6 text-center text-xs text-ink-500 break-words sm:px-6">
             FounderLens — sourcing, founder success prediction, and community connections, in one app.
           </footer>
         </div>

@@ -44,6 +44,11 @@ export interface Company {
   similarity?: number;
 }
 
+type MomentumContext = {
+  source?: string | null;
+  github_url?: string | null;
+};
+
 export interface Signal {
   id: string;
   company_id: string;
@@ -63,6 +68,10 @@ export interface Deal {
   company_id: string;
   company_name: string;
   sector: string | null;
+  source: string | null;
+  github_url: string | null;
+  raised_usd: number | null;
+  momentum_score: number | null;
   ai_score: number | null;
   logo_url: string | null;
   homepage: string | null;
@@ -133,12 +142,66 @@ export async function patchJson<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function fmtMoney(n: number | null | undefined): string {
-  if (!n || !Number.isFinite(n)) return '—';
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`;
-  return `$${n}`;
+export function fmtMoney(n: number | string | null | undefined): string {
+  if (n == null) return '—';
+  const value = typeof n === 'string' ? Number(n) : n;
+  if (!Number.isFinite(value)) return '—';
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+  if (value >= 1e3) return `$${(value / 1e3).toFixed(0)}K`;
+  return `$${value}`;
+}
+
+function momentumKind(entity: MomentumContext): 'github' | 'yc' | 'generic' {
+  if (entity.source === 'github' || entity.github_url) return 'github';
+  if (entity.source === 'yc') return 'yc';
+  return 'generic';
+}
+
+export function momentumLabel(entity: MomentumContext): string {
+  switch (momentumKind(entity)) {
+    case 'github':
+      return 'GitHub Stars/Day';
+    case 'yc':
+      return 'YC Traction Proxy';
+    default:
+      return 'Momentum';
+  }
+}
+
+export function momentumValue(entity: MomentumContext, value: number | null | undefined): string {
+  if (value == null) return '—';
+  const formatted = value.toFixed(1);
+  switch (momentumKind(entity)) {
+    case 'github':
+      return `${formatted} stars/day`;
+    default:
+      return formatted;
+  }
+}
+
+export function momentumTag(entity: MomentumContext, value: number | null | undefined): string {
+  if (value == null) return '—';
+  const formatted = value.toFixed(1);
+  switch (momentumKind(entity)) {
+    case 'github':
+      return `Stars/day ${formatted}`;
+    case 'yc':
+      return `YC proxy ${formatted}`;
+    default:
+      return `Momentum ${formatted}`;
+  }
+}
+
+export function momentumHelp(entity: MomentumContext): string {
+  switch (momentumKind(entity)) {
+    case 'github':
+      return 'GitHub momentum is repository stars divided by repo age in days.';
+    case 'yc':
+      return 'YC momentum is a source-specific proxy built from company age, team size, and YC top-company status.';
+    default:
+      return 'Momentum is a source-specific traction signal.';
+  }
 }
 
 export function fmtRelative(unixSec: number): string {

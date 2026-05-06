@@ -86,7 +86,7 @@ export default function DiscoverPage() {
   const rangeEnd = Math.min(total, page * (data?.pageSize ?? PAGE_SIZE));
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-white">Discover</h1>
       </header>
@@ -116,7 +116,7 @@ export default function DiscoverPage() {
       </form>
 
       <div className="grid lg:grid-cols-[220px_1fr] gap-6">
-        <aside className="glass rounded-xl p-4 h-fit space-y-4">
+        <aside className="glass h-fit min-w-0 space-y-4 rounded-xl p-4">
           <Filter label="Source" value={source} onChange={(v) => { setSource(v); setPage(1); }} options={SOURCES} />
           <Filter label="Sector" value={sector} onChange={(v) => { setSector(v); setPage(1); }} options={SECTORS} />
           <Filter label="Stage" value={stage} onChange={(v) => { setStage(v); setPage(1); }} options={STAGES} />
@@ -142,7 +142,7 @@ export default function DiscoverPage() {
           </div>
         </aside>
 
-        <section>
+        <section className="min-w-0">
           {isLoading ? (
             <div className="text-sm text-ink-500">Loading…</div>
           ) : companies.length === 0 ? (

@@ -53,7 +53,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 md:space-y-10">
+    <div className="min-w-0 space-y-8 md:space-y-10">
       <section>
         <div className="mb-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -86,15 +86,15 @@ export default function DashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,380px)]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Block title="Top scored" subtitle="Highest Claude composite scores">
             <Grid companies={hot?.companies ?? []} onSelect={(c) => setSelected(c.id)} />
           </Block>
-          <Block title="Highest momentum" subtitle="Stars / day on GitHub">
+          <Block title="Highest momentum" subtitle="Source-specific traction proxy">
             <Grid companies={momentum?.companies ?? []} onSelect={(c) => setSelected(c.id)} />
           </Block>
         </div>
-        <div className="xl:sticky xl:top-20 xl:self-start">
+        <div className="min-w-0 xl:sticky xl:top-20 xl:self-start">
           <Block title="Live signal feed" subtitle="Updates every 30s">
             <div className="max-h-[50vh] overflow-y-auto overscroll-contain pr-1 sm:max-h-[60vh] xl:max-h-[calc(100vh-11rem)]">
               <SignalFeed limit={25} />
@@ -118,10 +118,10 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="flex items-baseline justify-between mb-3">
+    <div className="min-w-0">
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="text-sm font-semibold text-white uppercase tracking-wider">{title}</h2>
-        {subtitle && <span className="text-xs text-ink-500">{subtitle}</span>}
+        {subtitle && <span className="text-xs text-ink-500 sm:text-right">{subtitle}</span>}
       </div>
       <div className="glass rounded-2xl p-4">{children}</div>
     </div>

@@ -13,7 +13,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { fetcher, patchJson, type Deal } from '@/lib/api';
+import { fetcher, fmtMoney, momentumTag, patchJson, type Deal } from '@/lib/api';
 import { CompanyDrawer } from '@/components/CompanyDrawer';
 
 const STAGE_LABELS: Record<string, string> = {
@@ -108,7 +108,7 @@ export default function PipelinePage() {
   }, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">Pipeline</h1>
@@ -246,10 +246,26 @@ function Card({ deal, dragging }: { deal: Deal; dragging?: boolean }) {
         )}
         <span className="text-sm text-white truncate flex-1">{deal.company_name}</span>
       </div>
-      <div className="flex items-center gap-2 mt-2 text-[11px] text-ink-500">
-        {deal.sector && <span className="bg-accent/10 text-accent-soft px-1.5 py-0.5 rounded">{deal.sector}</span>}
+      <div className="mt-2 flex items-start justify-between gap-2 text-[11px] text-ink-500">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          {deal.sector && (
+            <span className="inline-flex whitespace-nowrap rounded bg-accent/10 px-1.5 py-0.5 text-accent-soft">
+              {deal.sector}
+            </span>
+          )}
+          {deal.momentum_score != null && (
+            <span className="inline-flex whitespace-nowrap rounded bg-white/5 px-1.5 py-0.5 text-ink-300">
+              {momentumTag(deal, deal.momentum_score)}
+            </span>
+          )}
+          {deal.raised_usd != null && (
+            <span className="inline-flex whitespace-nowrap rounded bg-white/5 px-1.5 py-0.5 text-ink-300">
+              {fmtMoney(deal.raised_usd)}
+            </span>
+          )}
+        </div>
         {deal.ai_score !== null && deal.ai_score !== undefined && (
-          <span className="score-pill">★ {deal.ai_score.toFixed(1)}</span>
+          <span className="score-pill shrink-0">★ {deal.ai_score.toFixed(1)}</span>
         )}
       </div>
     </div>

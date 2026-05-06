@@ -3,7 +3,7 @@ import { nowSec, slugify, uid } from './util';
 
 // Embeddings are intentionally NOT triggered per-upsert. Voyage's free tier is
 // 3 RPM, so spamming one call per company gets us 429'd. Batched embedding is
-// done by the ingest endpoint and the 6h cron via backfillCompanyEmbeddings(),
+// done by the ingest endpoint and the scheduled cron via backfillCompanyEmbeddings(),
 // which packs many companies into a single API call.
 
 export interface UpsertCompanyInput {

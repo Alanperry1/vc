@@ -6,6 +6,9 @@ import {
   API_BASE,
   fmtMoney,
   fmtRelative,
+  momentumHelp,
+  momentumLabel,
+  momentumValue,
   postJson,
   type Company,
   type Signal,
@@ -94,10 +97,14 @@ export function CompanyDrawer({
           <div className="p-6 space-y-6">
             <section className="grid grid-cols-2 gap-3">
               <Stat label="AI Score" value={c.ai_score?.toFixed(1) ?? '—'} accent />
-              <Stat label="Momentum" value={c.momentum_score?.toFixed(1) ?? '—'} />
+              <Stat label={momentumLabel(c)} value={momentumValue(c, c.momentum_score)} />
               <Stat label="Stage" value={c.stage ?? '—'} />
               <Stat label="Raised" value={fmtMoney(c.raised_usd)} />
             </section>
+
+            {c.momentum_score != null && (
+              <p className="-mt-3 text-[11px] text-ink-500">{momentumHelp(c)}</p>
+            )}
 
             {breakdown && (
               <section className="glass rounded-xl p-4">

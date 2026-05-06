@@ -1,6 +1,6 @@
 'use client';
 
-import { fmtMoney, type Company } from '@/lib/api';
+import { fmtMoney, momentumTag, type Company } from '@/lib/api';
 import Link from 'next/link';
 
 export function CompanyCard({
@@ -47,7 +47,8 @@ export function CompanyCard({
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-ink-500">
             {company.sector && <Tag>{company.sector}</Tag>}
             {company.stage && <Tag>{company.stage}</Tag>}
-            {company.raised_usd && <Tag>{fmtMoney(company.raised_usd)}</Tag>}
+            {company.momentum_score != null && <Tag>{momentumTag(company, company.momentum_score)}</Tag>}
+            {company.raised_usd != null && <Tag>{fmtMoney(company.raised_usd)}</Tag>}
             {visibleSources.map((source) => (
               <Tag key={source} muted>
                 via {source}
