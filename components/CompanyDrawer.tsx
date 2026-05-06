@@ -124,6 +124,7 @@ export function CompanyDrawer({
 
             <section className="flex flex-wrap gap-3 text-xs">
               {c.homepage && <ExternalLink href={c.homepage} label="Homepage" />}
+              {c.linkedin_url && <ExternalLink href={c.linkedin_url} label="LinkedIn" />}
               {c.github_url && <ExternalLink href={c.github_url} label="GitHub" />}
               {c.hn_url && <ExternalLink href={c.hn_url} label="Hacker News" />}
             </section>

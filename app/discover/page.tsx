@@ -28,6 +28,7 @@ const STAGES = [
 const SOURCES = [
   { value: '', label: 'All' },
   { value: 'github', label: 'GitHub' },
+  { value: 'linkedin', label: 'LinkedIn' },
   { value: 'hn', label: 'HN' },
   { value: 'yc', label: 'YC' },
   { value: 'reddit', label: 'Reddit' },

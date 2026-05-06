@@ -30,6 +30,7 @@ export interface Company {
   sector: string | null;
   stage: string | null;
   homepage: string | null;
+  linkedin_url: string | null;
   github_url: string | null;
   hn_url: string | null;
   logo_url: string | null;

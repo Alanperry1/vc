@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS companies (
   location TEXT,
   founded_year INTEGER,
   homepage TEXT,
+  linkedin_url TEXT,
   github_url TEXT,
   hn_url TEXT,
   logo_url TEXT,
@@ -30,6 +31,8 @@ CREATE TABLE IF NOT EXISTS companies (
   updated_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::bigint
 );
 
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_companies_domain ON companies(domain) WHERE domain IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_companies_github ON companies(github_url) WHERE github_url IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_companies_score ON companies(ai_score DESC NULLS LAST);
@@ -38,6 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_companies_sector ON companies(sector);
 CREATE INDEX IF NOT EXISTS idx_companies_stage ON companies(stage);
 CREATE INDEX IF NOT EXISTS idx_companies_name_trgm ON companies USING GIN (name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_companies_desc_trgm ON companies USING GIN (description gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_companies_linkedin ON companies(linkedin_url) WHERE linkedin_url IS NOT NULL;
 -- HNSW for fast cosine similarity search.
 CREATE INDEX IF NOT EXISTS idx_companies_embedding
   ON companies USING hnsw (embedding vector_cosine_ops);

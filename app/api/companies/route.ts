@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 type CompanyRow = {
   id: string;
   source: string | null;
+  linkedin_url?: string | null;
   [key: string]: unknown;
 };
 
@@ -23,8 +24,11 @@ async function attachSources<T extends CompanyRow>(companies: T[]): Promise<(T &
   );
   const sourceMap = new Map(rows.map((row) => [row.company_id, row.sources ?? []]));
   return companies.map((company) => ({
-    ...company,
-    sources: sourceMap.get(company.id) ?? (company.source ? [company.source] : []),
+    ...(function () {
+      const sources = [...(sourceMap.get(company.id) ?? (company.source ? [company.source] : []))];
+      if (company.linkedin_url && !sources.includes('linkedin')) sources.push('linkedin');
+      return { ...company, sources };
+    })(),
   }));
 }
 
@@ -52,9 +56,13 @@ export async function GET(req: Request) {
       if (sector) { where.push(`c.sector = $${i++}`); binds.push(sector); }
       if (stage) { where.push(`c.stage = $${i++}`); binds.push(stage); }
       if (source) {
-        where.push(`(c.source = $${i} OR EXISTS (SELECT 1 FROM signals s WHERE s.company_id = c.id AND s.source = $${i}))`);
-        binds.push(source);
-        i++;
+        if (source === 'linkedin') {
+          where.push('c.linkedin_url IS NOT NULL');
+        } else {
+          where.push(`(c.source = $${i} OR EXISTS (SELECT 1 FROM signals s WHERE s.company_id = c.id AND s.source = $${i}))`);
+          binds.push(source);
+          i++;
+        }
       }
       if (minScore) { where.push(`c.ai_score >= $${i++}`); binds.push(Number(minScore)); }
 
@@ -91,13 +99,23 @@ export async function GET(req: Request) {
   if (sector) { where.push(`c.sector = $${i++}`); binds.push(sector); }
   if (stage) { where.push(`c.stage = $${i++}`); binds.push(stage); }
   if (source) {
-    where.push(`(c.source = $${i} OR EXISTS (SELECT 1 FROM signals s WHERE s.company_id = c.id AND s.source = $${i}))`);
-    binds.push(source);
-    i++;
+    if (source === 'linkedin') {
+      where.push('c.linkedin_url IS NOT NULL');
+    } else {
+      where.push(`(c.source = $${i} OR EXISTS (SELECT 1 FROM signals s WHERE s.company_id = c.id AND s.source = $${i}))`);
+      binds.push(source);
+      i++;
+    }
   }
   if (minScore) { where.push(`c.ai_score >= $${i++}`); binds.push(Number(minScore)); }
   if (search) {
-    where.push(`(c.name % $${i} OR c.description % $${i} OR c.name ILIKE $${i + 1} OR c.description ILIKE $${i + 1})`);
+    where.push(`(
+      c.name % $${i}
+      OR c.description % $${i}
+      OR c.name ILIKE $${i + 1}
+      OR c.description ILIKE $${i + 1}
+      OR c.linkedin_url ILIKE $${i + 1}
+    )`);
     binds.push(search);
     binds.push(`%${search}%`);
     i += 2;

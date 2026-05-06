@@ -15,6 +15,7 @@ export interface UpsertCompanyInput {
   location?: string | null;
   founded_year?: number | null;
   homepage?: string | null;
+  linkedin_url?: string | null;
   github_url?: string | null;
   hn_url?: string | null;
   logo_url?: string | null;
@@ -64,14 +65,15 @@ export async function upsertCompany(
          location = COALESCE($5, location),
          founded_year = COALESCE($6, founded_year),
          homepage = COALESCE($7, homepage),
-         github_url = COALESCE($8, github_url),
-         hn_url = COALESCE($9, hn_url),
-         logo_url = COALESCE($10, logo_url),
-         raised_usd = COALESCE($11, raised_usd),
-         team_size = COALESCE($12, team_size),
-         momentum_score = COALESCE($13, momentum_score),
-         updated_at = $14
-       WHERE id = $15`,
+         linkedin_url = COALESCE($8, linkedin_url),
+         github_url = COALESCE($9, github_url),
+         hn_url = COALESCE($10, hn_url),
+         logo_url = COALESCE($11, logo_url),
+         raised_usd = COALESCE($12, raised_usd),
+         team_size = COALESCE($13, team_size),
+         momentum_score = COALESCE($14, momentum_score),
+         updated_at = $15
+       WHERE id = $16`,
       [
         input.name ?? null,
         input.description ?? null,
@@ -80,6 +82,7 @@ export async function upsertCompany(
         input.location ?? null,
         input.founded_year ?? null,
         input.homepage ?? null,
+        input.linkedin_url ?? null,
         input.github_url ?? null,
         input.hn_url ?? null,
         input.logo_url ?? null,
@@ -98,9 +101,9 @@ export async function upsertCompany(
   await query(
     `INSERT INTO companies
        (id, name, domain, description, sector, stage, location, founded_year,
-        homepage, github_url, hn_url, logo_url, raised_usd, team_size,
+        homepage, linkedin_url, github_url, hn_url, logo_url, raised_usd, team_size,
         momentum_score, source, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
      ON CONFLICT (id) DO NOTHING`,
     [
       id,
@@ -112,6 +115,7 @@ export async function upsertCompany(
       input.location ?? null,
       input.founded_year ?? null,
       input.homepage ?? null,
+      input.linkedin_url ?? null,
       input.github_url ?? null,
       input.hn_url ?? null,
       input.logo_url ?? null,

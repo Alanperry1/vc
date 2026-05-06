@@ -48,6 +48,36 @@ function decodeHtml(text: string): string {
     .replace(/&gt;/g, '>');
 }
 
+function extractJsonStringByKey(text: string, key: string): string | null {
+  const marker = `"${key}":"`;
+  const start = text.indexOf(marker);
+  if (start === -1) return null;
+  let value = '';
+  let escaped = false;
+  for (let i = start + marker.length; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) {
+      value += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      value += ch;
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      try {
+        return JSON.parse(`"${value}"`) as string;
+      } catch {
+        return value;
+      }
+    }
+    value += ch;
+  }
+  return null;
+}
+
 function extractJsonArrayByKey(text: string, key: string): string | null {
   const marker = `"${key}":[`;
   const start = text.indexOf(marker);
@@ -77,9 +107,8 @@ function extractJsonArrayByKey(text: string, key: string): string | null {
   return null;
 }
 
-function parseFounders(html: string): YcFounderRecord[] {
-  const decoded = decodeHtml(html);
-  const raw = extractJsonArrayByKey(decoded, 'founders');
+function parseFounders(decodedHtml: string): YcFounderRecord[] {
+  const raw = extractJsonArrayByKey(decodedHtml, 'founders');
   if (!raw) return [];
   try {
     return JSON.parse(raw) as YcFounderRecord[];
@@ -142,7 +171,17 @@ export async function ingestYcFounders(limit = 16): Promise<number> {
         const res = await fetch(url, { headers: { 'user-agent': 'founderlens/0.1' } });
         if (!res.ok) continue;
         const html = await res.text();
-        const founders = parseFounders(html);
+        const decodedHtml = decodeHtml(html);
+        const founders = parseFounders(decodedHtml);
+        const companyLinkedin = normalizeSocial(extractJsonStringByKey(decodedHtml, 'linkedin_url'));
+        if (companyLinkedin) {
+          await query(
+            `UPDATE companies
+             SET linkedin_url = COALESCE($1, linkedin_url)
+             WHERE id = $2`,
+            [companyLinkedin, job.company.id],
+          );
+        }
         for (const founder of founders) {
           if (!founder.full_name) continue;
           const { id } = await upsertFounder({
