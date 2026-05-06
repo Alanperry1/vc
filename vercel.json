@@ -1,0 +1,17 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/ingest",
+      "schedule": "0 */6 * * *"
+    }
+  ],
+  "functions": {
+    "app/api/ingest/route.ts": { "maxDuration": 60 },
+    "app/api/cron/ingest/route.ts": { "maxDuration": 60 },
+    "app/api/companies/[id]/memo/route.ts": { "maxDuration": 60 },
+    "app/api/companies/[id]/score/route.ts": { "maxDuration": 60 },
+    "app/api/companies/score-batch/route.ts": { "maxDuration": 60 },
+    "app/api/founders/[id]/score/route.ts": { "maxDuration": 60 },
+    "app/api/embeddings/backfill/route.ts": { "maxDuration": 60 }
+  }
+}
