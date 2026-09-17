@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import useSWRImmutable from 'swr/immutable';
 import {
-  API_BASE,
+  fetcher,
   fmtMoney,
   fmtRelative,
   momentumHelp,
@@ -29,23 +30,13 @@ export function CompanyDrawer({
   onClose: () => void;
 }) {
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(companyId);
-  const [data, setData] = useState<DetailResponse | null>(null);
-  const [loading, setLoading] = useState(false);
   const [memoLoading, setMemoLoading] = useState(false);
+  const detailPath = activeCompanyId ? `/companies/${activeCompanyId}` : null;
+  const { data, isLoading, mutate } = useSWRImmutable<DetailResponse>(detailPath, fetcher);
 
   useEffect(() => {
     setActiveCompanyId(companyId);
   }, [companyId]);
-
-  useEffect(() => {
-    if (!activeCompanyId) return;
-    setLoading(true);
-    setData(null);
-    fetch(`${API_BASE}/companies/${activeCompanyId}`)
-      .then((r) => r.json())
-      .then(setData)
-      .finally(() => setLoading(false));
-  }, [activeCompanyId]);
 
   if (!activeCompanyId) return null;
 
@@ -60,7 +51,9 @@ export function CompanyDrawer({
         `/companies/${activeCompanyId}/memo`,
         {},
       );
-      setData((d) => (d ? { ...d, memo } : d));
+      await mutate((current) => (current ? { ...current, memo } : current), {
+        revalidate: false,
+      });
     } finally {
       setMemoLoading(false);
     }
@@ -91,7 +84,7 @@ export function CompanyDrawer({
           </button>
         </div>
 
-        {loading && <div className="p-6 text-ink-500">Loading…</div>}
+        {isLoading && <div className="p-6 text-ink-500">Loading…</div>}
 
         {c && (
           <div className="p-6 space-y-6">
@@ -222,21 +215,12 @@ function SimilarCompanies({
   companyId: string;
   onSelect: (id: string) => void;
 }) {
-  const [items, setItems] = useState<SimilarRow[] | null>(null);
-  const [reason, setReason] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE}/companies/${companyId}/similar`)
-      .then((r) => r.json())
-      .then((res: { similar: SimilarRow[]; reason?: string }) => {
-        if (cancelled) return;
-        setItems(res.similar ?? []);
-        setReason(res.reason ?? null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [companyId]);
+  const { data } = useSWRImmutable<{ similar: SimilarRow[]; reason?: string }>(
+    `/companies/${companyId}/similar`,
+    fetcher,
+  );
+  const items = data?.similar ?? null;
+  const reason = data?.reason ?? null;
 
   if (items === null) return null;
   if (items.length === 0) {
