@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import { fetcher, fmtRelative, postJson, type Founder } from '@/lib/api';
 import { FounderDrawer } from '@/components/FounderDrawer';
+import { FounderAvatar } from '@/components/FounderAvatar';
 
 const PAGE_SIZE = 24;
 
@@ -148,14 +149,7 @@ function FounderCard({
     <div className="glass rounded-xl p-4 flex flex-col gap-3">
       <button onClick={onOpen} className="text-left">
         <div className="flex items-start gap-3">
-          {founder.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={founder.avatar_url} alt="" className="w-10 h-10 rounded-full bg-ink-800" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-ink-800 grid place-items-center text-xs text-ink-500 font-bold">
-              {founder.name.slice(0, 2).toUpperCase()}
-            </div>
-          )}
+          <FounderAvatar name={founder.name} avatarUrl={founder.avatar_url} />
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">
               <span className="truncate font-semibold text-white">{founder.name}</span>

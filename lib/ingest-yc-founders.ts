@@ -123,6 +123,14 @@ function normalizeSocial(url: string | null | undefined): string | null {
   return cleaned || null;
 }
 
+function normalizeAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const cleaned = url.trim();
+  if (cleaned.startsWith('//')) return `https:${cleaned}`;
+  if (cleaned.startsWith('/')) return `https://www.ycombinator.com${cleaned}`;
+  return cleaned || null;
+}
+
 export async function ingestYcFounders(limit = 16): Promise<number> {
   const all = await fetchAllCompanies();
   if (all.length === 0) return 0;
@@ -189,7 +197,7 @@ export async function ingestYcFounders(limit = 16): Promise<number> {
             bio: founder.founder_bio ?? null,
             linkedin: normalizeSocial(founder.linkedin_url),
             twitter: normalizeSocial(founder.twitter_url),
-            avatar_url: founder.avatar_thumb_url ?? null,
+            avatar_url: normalizeAvatarUrl(founder.avatar_thumb_url),
             location: job.yc.all_locations || job.company.location || null,
             source: 'yc',
           });
